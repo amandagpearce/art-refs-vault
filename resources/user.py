@@ -56,3 +56,23 @@ class User(MethodView):
         return {"message": "Usuario deletado"}, 200
 
 
+@blp.route("/login")
+class UserLogin(MethodView):
+    @blp.arguments(UserSchema)
+    def post(self, user_data):
+        user = UserModel.query.filter(
+            UserModel.username == user_data["username"]
+        ).first()
+
+        if user and pbkdf2_sha256.verify(user_data["password"], user.password):
+            access_token = create_access_token(identity=user.id, fresh=True)
+            refresh_token = create_refresh_token(identity=user.id)
+
+            return {
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+            }
+
+        abort(401, message="Invalid credentials.")
+
+
