@@ -76,3 +76,16 @@ class UserLogin(MethodView):
         abort(401, message="Invalid credentials.")
 
 
+@blp.route("/logout")
+class UserLogout(MethodView):
+    @jwt_required()
+    def post(self):
+        jti = get_jwt()["jti"]  # or get_jwt().get("jti")
+
+        token = TokenBlocklistModel(token=jti)
+        db.session.add(token)
+        db.session.commit()
+
+        return {"message": "Logout executado."}, 200
+
+
