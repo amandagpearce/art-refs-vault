@@ -11,7 +11,7 @@ from flask_jwt_extended import (
 
 from db import db
 from schemas import UserSchema
-from models.user import UserModel
+from models.user import UserModel, AdminUserModel
 from models.token_blocklist import TokenBlocklistModel
 
 blp = Blueprint(
@@ -28,7 +28,7 @@ class UserRegister(MethodView):
         if UserModel.query.filter(
             UserModel.username == user_data["username"]
         ).first():
-            abort(409, message="Esse username já existe.")
+            abort(409, message="Email already exists, please login.")
 
         user = UserModel(
             username=user_data["username"],
@@ -37,7 +37,26 @@ class UserRegister(MethodView):
         db.session.add(user)
         db.session.commit()
 
-        return {"message": "Usuario criado com sucesso"}, 201
+        return {"message": "User created."}, 201
+
+
+# @blp.route("/admin-register")
+# class AdminUserRegister(MethodView):
+#     @blp.arguments(UserSchema)
+#     def post(self, user_data):
+#         if AdminUserModel.query.filter(
+#             AdminUserModel.username == user_data["username"]
+#         ).first():
+#             abort(409, message="Email already exists, please login.")
+
+#         admin_user = AdminUserModel(
+#             username=user_data["username"],
+#             password=pbkdf2_sha256.hash(user_data["password"]),
+#         )
+#         db.session.add(admin_user)
+#         db.session.commit()
+
+#         return {"message": "User created."}, 201
 
 
 @blp.route("/user/<int:user_id>")
@@ -53,25 +72,41 @@ class User(MethodView):
         user = UserModel.query.get_or_404(user_id)
         db.session.delete(user)
         db.session.commit()
-        return {"message": "Usuario deletado"}, 200
+        return {"message": "User deleted."}, 200
 
 
 @blp.route("/login")
 class UserLogin(MethodView):
     @blp.arguments(UserSchema)
     def post(self, user_data):
-        user = UserModel.query.filter(
+        regular_user = UserModel.query.filter(
             UserModel.username == user_data["username"]
         ).first()
+
+        admin_user = AdminUserModel.query.filter(
+            AdminUserModel.username == user_data["username"]
+        ).first()
+
+        if admin_user:
+            user = admin_user
+        else:
+            user = regular_user
 
         if user and pbkdf2_sha256.verify(user_data["password"], user.password):
             access_token = create_access_token(identity=user.id, fresh=True)
             refresh_token = create_refresh_token(identity=user.id)
 
-            return {
-                "access_token": access_token,
-                "refresh_token": refresh_token,
-            }
+            if admin_user:
+                return {
+                    "access_token": access_token,
+                    "refresh_token": refresh_token,
+                    "userType": "admin",
+                }
+            else:
+                return {
+                    "access_token": access_token,
+                    "refresh_token": refresh_token,
+                }
 
         abort(401, message="Invalid credentials.")
 
@@ -86,7 +121,7 @@ class UserLogout(MethodView):
         db.session.add(token)
         db.session.commit()
 
-        return {"message": "Logout executado."}, 200
+        return {"message": "User logged out."}, 200
 
 
 @blp.route("/refresh")

@@ -31,6 +31,7 @@ def create_app(db_url=None):  # factory pattern
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.init_app(app)  # initializes sqlalchemy
     migrate = Migrate(app, db)  # noqa
+
     api = Api(app)
 
     load_dotenv()
@@ -50,7 +51,7 @@ def create_app(db_url=None):  # factory pattern
         return (
             jsonify(
                 {
-                    "description": "Token não é do tipo fresh.",
+                    "description": "Token is not fresh.",
                     "error": "fresh_token_required",
                 }
             ),
@@ -61,7 +62,7 @@ def create_app(db_url=None):  # factory pattern
     def revoked_token_callback(jwt_header, jwt_payload):
         return (
             jsonify(
-                {"description": "Token revogado.", "error": "token_revoked"}
+                {"description": "Revoked token.", "error": "token_revoked"}
             ),
             401,
         )
@@ -70,7 +71,7 @@ def create_app(db_url=None):  # factory pattern
     def expired_token_callback(jwt_header, jwt_payload):
         return jsonify(
             {
-                "message": "Token expirado.",
+                "message": "Invalid Token.",
                 "error": "invalid_token",
             },
             401,
@@ -80,7 +81,7 @@ def create_app(db_url=None):  # factory pattern
     def invalid_token_callback(error):
         return jsonify(
             {
-                "message": "Assinatura de verificação falhou.",
+                "message": "Signature verification failed.",
                 "error": "invalid_token",
             },
             401,
@@ -90,7 +91,7 @@ def create_app(db_url=None):  # factory pattern
     def missing_token_callback(error):
         return jsonify(
             {
-                "description": "Request não contém token de acesso",
+                "description": "Request must contain access token.",
                 "error": "authorization_required",
             },
             401,
