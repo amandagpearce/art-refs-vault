@@ -10,7 +10,7 @@ from flask_jwt_extended import (
 )
 
 from db import db
-from schemas import UserSchema
+from schemas import UserSchema, ChangePasswordSchema
 from models.user import UserModel, AdminUserModel
 from models.token_blocklist import TokenBlocklistModel
 
@@ -131,3 +131,39 @@ class TokenRefresh(MethodView):
         current_user = get_jwt_identity()
         new_token = create_access_token(identity=current_user, fresh=False)
         return {"access_token": new_token}
+
+
+@blp.route("/change-password")
+class UserChangePassword(MethodView):
+    @blp.arguments(ChangePasswordSchema)
+    @jwt_required()
+    def put(self, user_data):
+        print("user_data", user_data)
+        current_user_id = get_jwt_identity()
+        regular_user = UserModel.query.get(current_user_id)
+        admin_user = AdminUserModel.query.get(current_user_id)
+
+        if admin_user:
+            user = admin_user
+        else:
+            user = regular_user
+
+        if not user and not admin_user:
+            abort(404, message="User not found.")
+
+        print(
+            "verification",
+            pbkdf2_sha256.verify(user_data["current_password"], user.password),
+        )
+
+        if pbkdf2_sha256.verify(user_data["current_password"], user.password):
+            # Set the new password
+            user.password = pbkdf2_sha256.hash(user_data["new_password"])
+
+            # Commit changes to the database
+            db.session.commit()
+
+            # Return a success message
+            return {"message": "Password changed successfully."}
+        else:
+            abort(401, message="Invalid current password.")

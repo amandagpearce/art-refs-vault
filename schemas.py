@@ -11,3 +11,8 @@ class UserSchema(Schema):
 
 class TokenBlocklist(Schema):
     token = fields.Str(required=True, load_only=True)
+
+
+class ChangePasswordSchema(Schema):
+    current_password = fields.Str(required=True, load_only=True)
+    new_password = fields.Str(required=True, load_only=True)
