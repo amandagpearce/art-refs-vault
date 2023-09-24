@@ -1,4 +1,4 @@
-# Art refs vault
+# Auth Service
 Projeto criado como componente C do MVP da disciplina de Back-end avançado do curso de pós-graduação em Desenvolvimento Full Stack da PUC-Rio.
 
 ## O que é?
