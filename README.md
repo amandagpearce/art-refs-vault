@@ -28,11 +28,16 @@ Substitua `suakey` pela sua string, ela pode ser gerada por um pacote terceiro (
 ### Instalação sem Docker
 1. Clone o projeto
 2. Na raiz do projeto, cole o arquivo `.env` preenchido como descrito na seção anterior
-3. Na raiz do projeto, rode o seguinte comando para iniciar o serviço na porta 5000:
+3. Crie e ative um ambiente virtual
+4. Na raiz do projeto, faça a instalação das dependências com o comando:
+```bash
+  pip install requirements.txt
+```
+5. Na raiz do projeto, rode o seguinte comando para iniciar o serviço na porta 5000:
 ```bash
   flask run
 ```
-4. A documentação no Swagger estará disponível em `http://localhost:5000/doc`
+6. A documentação no Swagger estará disponível em `http://localhost:5000/doc`
 
 ## Banco de dados
 A aplicação gerencia um banco de dados sqlite com as seguintes tabelas:
